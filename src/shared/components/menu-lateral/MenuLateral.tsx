@@ -12,16 +12,53 @@ import {
 } from '@mui/material';
 import { Box } from '@mui/system';
 import React from 'react';
-import { useDrawerContext } from '../../contexts';
+import { useAppThemeContext, useDrawerContext } from '../../contexts';
+import { useMatch, useNavigate, useResolvedPath } from 'react-router-dom';
 
 interface IMenuLateralProps {
   children: React.ReactNode;
 }
 
+interface IListItemLinkProps {
+  to: string;
+  icon: string;
+  label: string;
+  onClick: (() => void) | undefined;
+}
+
+const ListItemLink: React.FC<IListItemLinkProps> = ({
+  to,
+  icon,
+  label,
+  onClick,
+}) => {
+  const navigate = useNavigate();
+
+  const resolvedPath = useResolvedPath(to);
+  const match = useMatch({ path: resolvedPath.pathname, end: false });
+
+  const handleClick = () => {
+    navigate(to);
+    onClick?.();
+  };
+
+  return (
+    <ListItemButton selected={!!match} onClick={handleClick}>
+      <ListItemIcon>
+        <Icon>{icon}</Icon>
+      </ListItemIcon>
+      <ListItemText primary={label} />
+    </ListItemButton>
+  );
+};
+
 export const MenuLAteral: React.FC<IMenuLateralProps> = ({ children }) => {
   const theme = useTheme();
   const smDown = useMediaQuery(theme.breakpoints.down('sm'));
-  const { isDrawerOpen, toggleDrawerOpen } = useDrawerContext();
+
+  const { isDrawerOpen, toggleDrawerOpen, drawerOptions } = useDrawerContext();
+  const { toggleTheme } = useAppThemeContext();
+
   return (
     <>
       <Drawer
@@ -50,11 +87,25 @@ export const MenuLAteral: React.FC<IMenuLateralProps> = ({ children }) => {
           <Divider />
           <Box flex={1}>
             <List component="nav">
-              <ListItemButton>
+              {drawerOptions.map((drawerOptions) => (
+                <ListItemLink
+                  key={drawerOptions.path}
+                  icon={drawerOptions.icon}
+                  label={drawerOptions.label}
+                  to={drawerOptions.path}
+                  onClick={smDown ? toggleDrawerOpen : undefined}
+                />
+              ))}
+            </List>
+          </Box>
+
+          <Box>
+            <List component="nav">
+              <ListItemButton onClick={toggleTheme}>
                 <ListItemIcon>
-                  <Icon>home</Icon>
+                  <Icon>dark_mode</Icon>
                 </ListItemIcon>
-                <ListItemText primary="Página Inicial" />
+                <ListItemText primary="Alternar tema" />
               </ListItemButton>
             </List>
           </Box>
